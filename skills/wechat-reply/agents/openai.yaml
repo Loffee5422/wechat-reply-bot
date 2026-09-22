@@ -1,0 +1,4 @@
+interface:
+  display_name: "WeChat Reply"
+  short_description: "Configure and operate local macOS WeChat replies"
+  default_prompt: "Use $wechat-reply to inspect setup or configure the local WeChat reply dashboard."

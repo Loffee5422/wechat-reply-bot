@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WeChat Reply / 微信回复助手</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">W</span><div><strong>WeChat Reply</strong><span>微信回复助手</span></div></div>
+      <div class="top-meta"><span class="model-pill">gpt-5.6-luna</span><span>（bot回复 beta）</span></div>
+    </header>
+    <div class="layout">
+      <nav class="sidebar" aria-label="主导航">
+        <button class="nav-item active" data-page="overview"><span>概览</span><small>运行状态</small></button>
+        <button class="nav-item" data-page="config"><span>回复配置</span><small>对象与风格</small></button>
+        <button class="nav-item" data-page="records"><span>回复记录</span><small>反馈与追踪</small></button>
+        <button class="nav-item" data-page="memory"><span>Memory</span><small>长期偏好</small></button>
+        <button class="nav-item" data-page="setup"><span>设置</span><small>环境检查</small></button>
+        <div class="side-note">本地运行 · 数据留在此设备</div>
+      </nav>
+      <main class="content">
+        <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+        <section class="page active" id="page-overview" aria-labelledby="overview-title">
+          <div class="page-heading"><div><p class="eyebrow">CONTROL CENTER</p><h1 id="overview-title">概览</h1><p>查看本地脚本状态，控制自动回复。</p></div><button class="btn primary" id="toggle-running">启动自动回复</button></div>
+          <div class="status-grid"><article class="card status-card"><div class="card-label">当前状态</div><div class="status-line"><span class="status-dot" id="status-dot"></span><strong id="status-text">读取中…</strong></div><p id="status-detail">正在连接本地服务</p></article><article class="card"><div class="card-label">运行参数</div><dl class="stats"><div><dt>轮询间隔</dt><dd id="poll-value">—</dd></div><div><dt>已回复</dt><dd id="reply-count">—</dd></div><div><dt>已跳过</dt><dd id="skip-count">—</dd></div><div><dt>需人工处理</dt><dd id="needs-count">—</dd></div></dl></article></div>
+          <article class="card info-card"><div class="card-label">脚本说明</div><p>脚本在本机读取微信窗口中的新消息，按你的对象、风格和模板决定是否回复。状态检测只访问本地服务，不会调用模型；生成风格草稿时才会主动使用模型。</p><p class="muted" id="last-scan">最近扫描：—</p></article>
+        </section>
+        <section class="page" id="page-config" aria-labelledby="config-title">
+          <div class="page-heading"><div><p class="eyebrow">REPLY RULES</p><h1 id="config-title">回复配置</h1><p>限定自动回复对象，并定义回答方式。</p></div><button class="btn primary" id="save-config">保存配置</button></div>
+          <article class="card"><div class="card-title"><h2>回复对象</h2><span class="tag">系统联系人不可选</span></div><fieldset class="scope"><legend class="sr-only">回复范围</legend><label><input type="radio" name="scope" value="all"> 全部已发现联系人</label><label><input type="radio" name="scope" value="selected"> 仅选择的联系人</label></fieldset>
+            <div class="contact-toolbar"><label class="search"><span class="sr-only">搜索联系人</span><input id="contact-search" type="search" placeholder="搜索已发现联系人" autocomplete="off"><span aria-hidden="true">⌕</span></label><button class="btn secondary" id="refresh-contacts">从微信刷新</button></div><p class="hint">刷新会短暂读取微信当前可见联系人。</p>
+            <div id="contacts-list" class="contacts" aria-live="polite"></div>
+            <div class="manual-add"><label for="manual-contact">手动添加精确名称</label><div class="inline-form"><input id="manual-contact" type="text" placeholder="用于未发现的联系人"><button class="btn secondary" id="add-contact">添加</button></div><p class="hint">手动联系人仅作为匹配名称使用，未冒充已发现联系人。</p></div>
+          </article>
+          <article class="card"><div class="card-title"><h2>回复规则</h2><span class="tag" id="reply-mode-label">当前：Luna 按语境生成</span></div><fieldset class="reply-mode"><legend>回复模式</legend><label><input type="radio" name="reply-mode" value="model"> Luna 按语境生成</label><label><input type="radio" name="reply-mode" value="template"> 固定模板（零模型调用）</label></fieldset><p class="hint mode-hint" id="mode-hint">使用模型结合来信、风格和上下文生成回复。</p><label class="switch-row"><input id="group-mentions" type="checkbox"><span class="switch" aria-hidden="true"></span><span>群聊仅在被 @ 时回复</span><span class="tag">默认开启</span></label><div class="form-grid"><label>回复风格<textarea id="style" rows="5" placeholder="例如：简洁、友好、先回答问题再补充说明"></textarea></label><label>回复模板<textarea id="template" rows="5" placeholder="支持 {name} 和 {message}，例如：你好{name}，收到你的消息：{message}"></textarea></label></div><div class="generate-row"><button class="btn secondary" id="generate-style">选聊天生成风格草稿</button><span class="hint">会用所选聊天中的本人消息调用模型生成草稿，不会自动覆盖未保存编辑。</span></div></article>
+        </section>
+        <section class="page" id="page-records" aria-labelledby="records-title"><div class="page-heading"><div><p class="eyebrow">ACTIVITY</p><h1 id="records-title">回复记录</h1><p>查看具体来信与回复，并把反馈写入 Memory。</p></div></div><div id="records-list" class="record-list"><div class="empty">读取中…</div></div></section>
+        <section class="page" id="page-memory" aria-labelledby="memory-title"><div class="page-heading"><div><p class="eyebrow">LONG-TERM PREFERENCES</p><h1 id="memory-title">Memory</h1><p>手工维护回复助手可以长期遵循的偏好。</p></div><button class="btn primary" id="save-memory">保存 Memory</button></div><article class="card"><label for="memory-content">内容</label><textarea id="memory-content" class="memory-editor" rows="18" placeholder="例如：称呼我为…；遇到技术问题先给结论…"></textarea><div class="editor-footer"><span class="muted" id="memory-updated">更新时间：—</span><span class="dirty" id="memory-dirty" hidden>有未保存修改</span></div></article></section>
+        <section class="page" id="page-setup" aria-labelledby="setup-title"><div class="page-heading"><div><p class="eyebrow">LOCAL SETUP</p><h1 id="setup-title">设置</h1><p>确认微信自动回复所需的本机依赖与权限。</p></div><button class="btn secondary" id="check-setup">重新检查</button></div><article class="card"><div class="setup-head"><h2>环境检查</h2><span class="muted" id="setup-url"></span></div><div id="setup-list" class="setup-list"><div class="empty">读取中…</div></div></article><article class="card model-card"><div><div class="card-label">全局默认模型</div><label for="global-model" class="sr-only">全局默认模型</label><select id="global-model" disabled><option>读取模型列表中…</option></select><p class="muted">对象未单独指定模型时使用；模型选项来自本地服务。</p><p class="error-text" id="models-error" hidden></p><button class="btn secondary" id="retry-models" hidden>重试模型列表</button></div><div><label for="poll-seconds">检测间隔（秒）</label><input id="poll-seconds" type="number" min="3" max="3600" step="1"></div></article></section>
+      </main>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
