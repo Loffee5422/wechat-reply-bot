@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import mimetypes
 import os
 import argparse
 import threading
@@ -27,6 +28,12 @@ watcher = None
 last_scan = None
 last_error = ""
 server_port = 8765
+WEB_FILES = {
+    "/": Path(__file__).resolve().parent.parent / "web" / "index.html",
+    "/index.html": Path(__file__).resolve().parent.parent / "web" / "index.html",
+    "/app.js": Path(__file__).resolve().parent.parent / "web" / "app.js",
+    "/styles.css": Path(__file__).resolve().parent.parent / "web" / "styles.css",
+}
 
 
 def atomic(path: Path, value: str) -> None:
@@ -162,6 +169,17 @@ class Handler(BaseHTTPRequestHandler):
             return False
         return not origin or origin in {f"http://127.0.0.1:{server_port}", f"http://localhost:{server_port}"}
 
+    def send_static(self, path: Path):
+        try:
+            payload = path.read_bytes()
+        except (FileNotFoundError, IsADirectoryError):
+            return self.send_json(404, {"error": "未找到资源"})
+        self.send_response(200)
+        self.send_header("Content-Type", mimetypes.guess_type(path.name)[0] or "application/octet-stream")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
     def do_GET(self):
         p = urlparse(self.path)
         if p.path == "/api/status": return self.send_json(200, status())
@@ -177,6 +195,10 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(200, {"records": records()[-limit:]})
         if p.path == "/api/contacts":
             return self.send_json(200, {"contacts": contacts()})
+        if p.path in WEB_FILES:
+            if not self.origin_ok():
+                return self.send_json(403, {"error": "拒绝跨站请求"})
+            return self.send_static(WEB_FILES[p.path])
         self.send_json(404, {"error": "未找到接口"})
 
     def do_POST(self):
