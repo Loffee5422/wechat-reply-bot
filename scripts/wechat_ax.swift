@@ -379,8 +379,8 @@ if command == "scroll" {
     }
     let source = CGEventSource(stateID: .hidSystemState)
     let point = CGPoint(x: x + w / 2, y: y + h / 2)
-    CGWarpMouseCursorPosition(point)
     let event = CGEvent(scrollWheelEvent2Source: source, units: .line, wheelCount: 1, wheel1: delta, wheel2: 0, wheel3: 0)
+    event?.location = point
     event?.postToPid(wechatPID)
     usleep(150_000)
     json(Result(ok: true, trusted: trusted, windowCount: 1)); exit(0)
