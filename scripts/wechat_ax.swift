@@ -373,15 +373,11 @@ if command == "press" {
 
 if command == "scroll" {
     let delta = Int32(CommandLine.arguments.dropFirst(2).first ?? "-8") ?? -8
-    let current = tree(window)
-    guard let list = find(current, id: "session_list"), let x = list.x, let y = list.y, let w = list.width, let h = list.height else {
+    guard let listElement = locate(window, id: "session_list") else {
         json(Result(ok: false, error: "session_list_unavailable", trusted: trusted)); exit(1)
     }
-    let source = CGEventSource(stateID: .hidSystemState)
-    let point = CGPoint(x: x + w / 2, y: y + h / 2)
-    let event = CGEvent(scrollWheelEvent2Source: source, units: .line, wheelCount: 1, wheel1: delta, wheel2: 0, wheel3: 0)
-    event?.location = point
-    event?.postToPid(wechatPID)
+    _ = AXUIElementSetAttributeValue(listElement, kAXFocusedAttribute as CFString, true as CFBoolean)
+    if delta < 0 { tapKey(121) } else if delta > 0 { tapKey(116) }
     usleep(150_000)
     json(Result(ok: true, trusted: trusted, windowCount: 1)); exit(0)
 }
